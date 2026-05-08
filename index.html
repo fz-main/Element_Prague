@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Element Prague — Espresso Bar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --cream: #f5f0e8;
+    --espresso: #2a1a0e;
+    --gold: #c8a96e;
+    --gold2: #e8c98a;
+    --rust: #8b3a1e;
+    --fog: #d4cec4;
+    --white: #fdfaf5;
+    --glass: rgba(245,240,232,0.06);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--espresso);
+    color: var(--cream);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CUSTOM CURSOR ───────────────────────────── */
+  #cursor {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: transform .15s ease, background .2s;
+    mix-blend-mode: screen;
+  }
+  #cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%,-50%);
+    transition: transform .4s cubic-bezier(.25,.46,.45,.94), opacity .3s;
+    opacity: .6;
+  }
+  body:hover #cursor { opacity: 1; }
+
+  /* ── LOADER ──────────────────────────────────── */
+  #loader {
+    position: fixed; inset: 0; z-index: 10000;
+    background: var(--espresso);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 24px;
+    transition: opacity .8s ease, transform .8s ease;
+  }
+  #loader.done { opacity: 0; transform: translateY(-100%); pointer-events: none; }
+  .loader-word {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 10vw, 120px);
+    font-weight: 900;
+    letter-spacing: -.02em;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 50%, var(--rust) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    clip-path: inset(0 100% 0 0);
+    animation: revealWord 1.2s cubic-bezier(.77,0,.18,1) .3s forwards;
+  }
+  @keyframes revealWord {
+    to { clip-path: inset(0 0% 0 0); }
+  }
+  .loader-bar {
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    animation: growBar 1.8s ease forwards;
+  }
+  @keyframes growBar {
+    to { width: 200px; }
+  }
+  .loader-sub {
+    font-size: 13px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--fog);
+    opacity: 0;
+    animation: fadeUp .8s ease 1.2s forwards;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── NAV ─────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 20px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background .4s, backdrop-filter .4s, padding .3s;
+  }
+  nav.scrolled {
+    background: rgba(13,8,4,.85);
+    backdrop-filter: blur(16px);
+    padding: 14px 40px;
+    border-bottom: 1px solid rgba(200,169,110,.15);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 900;
+    letter-spacing: -.01em;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 32px; align-items: center; }
+  .nav-links a {
+    color: var(--fog); text-decoration: none;
+    font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 500;
+    position: relative; padding-bottom: 4px;
+    transition: color .2s;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: 0; left: 0;
+    width: 0; height: 1px; background: var(--gold);
+    transition: width .3s;
+  }
+  .nav-links a:hover { color: var(--gold2); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* Language switcher */
+  .lang-switcher {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .lang-btn {
+    background: none; border: 1px solid rgba(200,169,110,.3);
+    color: var(--fog); padding: 4px 10px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s; border-radius: 2px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .lang-btn:hover, .lang-btn.active {
+    background: var(--gold); color: var(--espresso);
+    border-color: var(--gold);
+  }
+
+  /* Hamburger */
+  .hamburger {
+    display: none; flex-direction: column; gap: 5px;
+    cursor: pointer; padding: 4px;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 1.5px;
+    background: var(--gold); transition: all .3s;
+  }
+  .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(4.5px,4.5px); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4.5px,-4.5px); }
+
+  .mobile-menu {
+    display: none; position: fixed; inset: 0; z-index: 99;
+    background: rgba(13,8,4,.97);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 32px;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px; color: var(--cream); text-decoration: none;
+    opacity: 0; transform: translateY(20px);
+    animation: mobileLink .4s ease forwards;
+    transition: color .2s;
+  }
+  .mobile-menu a:hover { color: var(--gold); }
+  @keyframes mobileLink {
+    to { opacity:1; transform: translateY(0); }
+  }
+  .mobile-menu .lang-switcher { margin-top: 16px; }
+
+  /* ── HERO ─────────────────────────────────────── */
+  #hero {
+    min-height: 100vh;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 40%, rgba(139,58,30,.35) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 80% at 20% 70%, rgba(200,169,110,.12) 0%, transparent 55%),
+      radial-gradient(ellipse 100% 100% at 50% 50%, #1a0d06 0%, #0d0d0d 100%);
+    z-index: 0;
+  }
+  .hero-noise {
+    position: absolute; inset: 0; z-index: 1;
+    opacity: .04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none; z-index: 1;
+    animation: floatOrb linear infinite;
+  }
+  .orb1 { width: 500px; height: 500px; background: rgba(139,58,30,.25); top: -100px; right: -100px; animation-duration: 20s; }
+  .orb2 { width: 350px; height: 350px; background: rgba(200,169,110,.15); bottom: 50px; left: -80px; animation-duration: 28s; animation-delay: -8s; }
+  .orb3 { width: 250px; height: 250px; background: rgba(42,26,14,.5); top: 40%; left: 30%; animation-duration: 16s; animation-delay: -4s; }
+  @keyframes floatOrb {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%      { transform: translate(30px,-20px) scale(1.05); }
+    66%      { transform: translate(-20px,30px) scale(.95); }
+  }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    text-align: center; padding: 40px 20px;
+    max-width: 900px;
+  }
+  .hero-eyebrow {
+    font-size: 12px; letter-spacing: .4em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 24px;
+    opacity: 0; animation: fadeUp .8s ease 2s forwards;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(56px, 12vw, 140px);
+    font-weight: 900; line-height: .9;
+    letter-spacing: -.03em;
+    opacity: 0; animation: fadeUp .9s ease 2.1s forwards;
+  }
+  .hero-title span {
+    display: block;
+    background: linear-gradient(135deg, var(--cream) 0%, var(--gold2) 40%, var(--gold) 70%, var(--rust) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-title em {
+    display: block; font-style: italic;
+    font-size: .55em; letter-spacing: .05em; font-weight: 400;
+    color: var(--fog); -webkit-text-fill-color: var(--fog);
+    margin-top: 8px;
+  }
+  .hero-subtitle {
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--fog); max-width: 500px; margin: 28px auto 0;
+    line-height: 1.7; font-weight: 300;
+    opacity: 0; animation: fadeUp .8s ease 2.3s forwards;
+  }
+  .hero-cta {
+    margin-top: 44px;
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    opacity: 0; animation: fadeUp .8s ease 2.5s forwards;
+  }
+  .btn-primary {
+    padding: 14px 36px;
+    background: linear-gradient(135deg, var(--gold), var(--rust));
+    color: var(--white); text-decoration: none;
+    font-size: 13px; letter-spacing: .15em; text-transform: uppercase;
+    font-weight: 500; border: none; cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: transform .3s, box-shadow .3s, filter .3s;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--gold2), var(--gold));
+    opacity: 0; transition: opacity .3s;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(139,58,30,.4); }
+  .btn-primary:hover::before { opacity: 1; }
+  .btn-outline {
+    padding: 14px 36px;
+    background: transparent;
+    border: 1px solid rgba(200,169,110,.5);
+    color: var(--gold); text-decoration: none;
+    font-size: 13px; letter-spacing: .15em; text-transform: uppercase;
+    font-weight: 500; cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all .3s;
+  }
+  .btn-outline:hover { background: rgba(200,169,110,.1); border-color: var(--gold2); color: var(--gold2); transform: translateY(-3px); }
+
+  .hero-scroll {
+    position: absolute; bottom: 32px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; animation: fadeUp .8s ease 3s forwards;
+  }
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: scrollPulse 2s ease infinite;
+  }
+  @keyframes scrollPulse {
+    0%,100% { opacity: .4; transform: scaleY(1); }
+    50%      { opacity: 1; transform: scaleY(1.2); }
+  }
+  .scroll-text { font-size: 10px; letter-spacing: .3em; color: var(--fog); text-transform: uppercase; }
+
+  /* ── MARQUEE ───────────────────────────────────── */
+  .marquee-wrap {
+    overflow: hidden; padding: 20px 0;
+    border-top: 1px solid rgba(200,169,110,.1);
+    border-bottom: 1px solid rgba(200,169,110,.1);
+    background: rgba(200,169,110,.03);
+  }
+  .marquee-track {
+    display: flex; gap: 60px; white-space: nowrap;
+    animation: marquee 20s linear infinite;
+  }
+  .marquee-track:hover { animation-play-state: paused; }
+  .marquee-item {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px; font-style: italic;
+    color: var(--gold); letter-spacing: .1em; flex-shrink: 0;
+  }
+  .marquee-sep { color: var(--rust); font-style: normal; }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* ── SECTION COMMON ────────────────────────────── */
+  section { position: relative; }
+  .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+
+  .section-label {
+    font-size: 11px; letter-spacing: .4em; text-transform: uppercase;
+    color: var(--gold); display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px;
+  }
+  .section-label::before {
+    content: ''; display: block;
+    width: 40px; height: 1px; background: var(--gold);
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 900; line-height: 1.05;
+    letter-spacing: -.02em;
+    margin-bottom: 24px;
+  }
+  .section-title span { color: var(--gold); }
+  .section-body {
+    font-size: 16px; line-height: 1.75;
+    color: var(--fog); font-weight: 300;
+    max-width: 520px;
+  }
+
+  /* reveal animation */
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity .8s ease, transform .8s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── ABOUT / INTRO ─────────────────────────────── */
+  #about {
+    padding: 120px 0;
+    background: linear-gradient(180deg, #0d0d0d 0%, #140b05 100%);
+  }
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .about-visual {
+    position: relative;
+  }
+  .about-img-frame {
+    width: 100%; aspect-ratio: 4/5;
+    background: linear-gradient(135deg, #2a1a0e, #1a0d06);
+    border: 1px solid rgba(200,169,110,.15);
+    position: relative; overflow: hidden;
+    border-radius: 2px;
+  }
+  .about-img-frame::before {
+    content: ''; position: absolute;
+    inset: 15px;
+    border: 1px solid rgba(200,169,110,.08);
+    z-index: 1; pointer-events: none;
+  }
+  .about-img-inner {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 30%, rgba(139,58,30,.4), transparent 70%),
+      radial-gradient(ellipse at bottom, rgba(200,169,110,.1), transparent 60%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .coffee-icon {
+    font-size: 80px; opacity: .3;
+    animation: breathe 4s ease infinite;
+  }
+  @keyframes breathe {
+    0%,100% { transform: scale(1); opacity: .3; }
+    50%      { transform: scale(1.05); opacity: .45; }
+  }
+  .about-badge {
+    position: absolute; bottom: -20px; right: -20px;
+    width: 120px; height: 120px;
+    background: linear-gradient(135deg, var(--gold), var(--rust));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; text-align: center;
+    font-family: 'Playfair Display', serif;
+    box-shadow: 0 20px 40px rgba(139,58,30,.4);
+    animation: rotateBadge 20s linear infinite;
+  }
+  .about-badge-num { font-size: 32px; font-weight: 900; color: var(--espresso); line-height: 1; }
+  .about-badge-txt { font-size: 10px; color: var(--espresso); letter-spacing: .05em; }
+  @keyframes rotateBadge {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* ── ADVANTAGES ──────────────────────────────── */
+  #advantages {
+    padding: 120px 0;
+    background: linear-gradient(180deg, #140b05 0%, #0d0d0d 100%);
+  }
+  .advantages-header {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    margin-bottom: 80px;
+    align-items: end;
+  }
+  .cards-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .adv-card {
+    padding: 40px 32px;
+    background: var(--glass);
+    border: 1px solid rgba(200,169,110,.1);
+    position: relative; overflow: hidden;
+    cursor: default;
+    transition: transform .4s cubic-bezier(.25,.46,.45,.94), border-color .3s, box-shadow .4s;
+    border-radius: 2px;
+  }
+  .adv-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(200,169,110,.06), transparent);
+    opacity: 0; transition: opacity .4s;
+  }
+  .adv-card::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--rust));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .5s cubic-bezier(.25,.46,.45,.94);
+  }
+  .adv-card:hover { transform: translateY(-8px); border-color: rgba(200,169,110,.3); box-shadow: 0 30px 60px rgba(0,0,0,.4); }
+  .adv-card:hover::before { opacity: 1; }
+  .adv-card:hover::after { transform: scaleX(1); }
+  .adv-icon {
+    font-size: 36px; margin-bottom: 20px; display: block;
+    filter: grayscale(.3);
+  }
+  .adv-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700;
+    margin-bottom: 12px; color: var(--cream);
+  }
+  .adv-body { font-size: 14px; line-height: 1.7; color: var(--fog); font-weight: 300; }
+  .adv-num {
+    position: absolute; top: 20px; right: 24px;
+    font-family: 'Playfair Display', serif;
+    font-size: 56px; font-weight: 900;
+    color: rgba(200,169,110,.06); line-height: 1;
+  }
+
+  /* ── MENU / ASSORTMENT ───────────────────────── */
+  #menu {
+    padding: 120px 0;
+    background: #0d0d0d;
+    overflow: hidden;
+  }
+  .menu-header { margin-bottom: 60px; }
+  .tabs {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    margin-top: 40px; border-bottom: 1px solid rgba(200,169,110,.15);
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    padding: 12px 28px;
+    background: none; border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--fog); cursor: pointer;
+    position: relative; transition: color .3s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab-btn::after {
+    content: ''; position: absolute;
+    bottom: -1px; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--rust));
+    transform: scaleX(0); transition: transform .3s;
+  }
+  .tab-btn.active { color: var(--gold2); }
+  .tab-btn.active::after { transform: scaleX(1); }
+  .tab-btn:hover { color: var(--gold); }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; padding-top: 40px; }
+
+  .menu-card {
+    padding: 28px;
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(200,169,110,.08);
+    border-radius: 2px;
+    position: relative; overflow: hidden;
+    transition: transform .3s, box-shadow .3s, background .3s;
+    cursor: default;
+  }
+  .menu-card:hover {
+    transform: translateY(-4px);
+    background: rgba(200,169,110,.05);
+    box-shadow: 0 20px 40px rgba(0,0,0,.3);
+  }
+  .menu-card-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .menu-card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700; color: var(--cream);
+  }
+  .menu-card-price {
+    font-size: 16px; font-weight: 500; color: var(--gold);
+    white-space: nowrap; padding-left: 12px;
+  }
+  .menu-card-desc { font-size: 13px; color: var(--fog); line-height: 1.6; }
+  .menu-card-tag {
+    display: inline-block; margin-top: 12px;
+    font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+    padding: 3px 10px; border: 1px solid rgba(200,169,110,.2);
+    color: var(--gold); border-radius: 2px;
+  }
+
+  /* ── SERVICES ─────────────────────────────────── */
+  #services {
+    padding: 120px 0;
+    background: linear-gradient(180deg, #0d0d0d 0%, #140b05 100%);
+  }
+  .services-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
+    margin-top: 60px;
+  }
+  .service-block {
+    padding: 60px 50px;
+    background: rgba(255,255,255,.02);
+    border: 1px solid rgba(200,169,110,.07);
+    position: relative; overflow: hidden;
+    cursor: default;
+    transition: background .4s;
+  }
+  .service-block:hover { background: rgba(200,169,110,.04); }
+  .service-block::before {
+    content: attr(data-num);
+    position: absolute; top: -10px; right: 20px;
+    font-family: 'Playfair Display', serif;
+    font-size: 120px; font-weight: 900;
+    color: rgba(200,169,110,.04); line-height: 1;
+    pointer-events: none;
+  }
+  .service-icon { font-size: 40px; margin-bottom: 20px; display: block; }
+  .service-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700;
+    margin-bottom: 14px; color: var(--cream);
+  }
+  .service-body { font-size: 15px; line-height: 1.7; color: var(--fog); font-weight: 300; }
+  .service-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 20px; color: var(--gold);
+    font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+    text-decoration: none; transition: gap .3s, color .2s;
+  }
+  .service-link:hover { gap: 14px; color: var(--gold2); }
+
+  /* ── TESTIMONIALS ────────────────────────────── */
+  #reviews {
+    padding: 100px 0;
+    background: #0d0d0d;
+    overflow: hidden;
+  }
+  .reviews-track-wrap { overflow: hidden; margin-top: 60px; }
+  .reviews-track {
+    display: flex; gap: 24px;
+    animation: reviewScroll 30s linear infinite;
+  }
+  .reviews-track:hover { animation-play-state: paused; }
+  @keyframes reviewScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .review-card {
+    min-width: 360px; max-width: 360px;
+    padding: 36px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(200,169,110,.1);
+    border-radius: 2px; flex-shrink: 0;
+    transition: border-color .3s;
+  }
+  .review-card:hover { border-color: rgba(200,169,110,.3); }
+  .review-stars { color: var(--gold); font-size: 14px; margin-bottom: 16px; }
+  .review-text {
+    font-size: 15px; line-height: 1.7; color: var(--fog);
+    font-style: italic; font-weight: 300; margin-bottom: 20px;
+  }
+  .review-author { font-size: 13px; color: var(--gold2); font-weight: 500; }
+  .review-date { font-size: 11px; color: rgba(200,169,110,.4); margin-top: 2px; }
+
+  /* ── MAP ─────────────────────────────────────── */
+  #location {
+    padding: 100px 0 0;
+    background: linear-gradient(180deg, #0d0d0d 0%, #0a0704 100%);
+  }
+  .location-grid {
+    display: grid; grid-template-columns: 1fr 1.6fr; gap: 60px;
+    align-items: start; margin-bottom: 60px;
+  }
+  .location-info {}
+  .info-item {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 24px 0; border-bottom: 1px solid rgba(200,169,110,.08);
+  }
+  .info-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+  .info-label { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+  .info-value { font-size: 15px; color: var(--cream); line-height: 1.5; }
+  .map-wrap {
+    width: 100%; height: 440px;
+    border: 1px solid rgba(200,169,110,.12);
+    border-radius: 2px; overflow: hidden;
+    position: relative;
+  }
+  .map-wrap iframe {
+    width: 100%; height: 100%; border: none;
+    filter: grayscale(.5) sepia(.2) brightness(.85);
+  }
+  .map-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom, transparent 60%, rgba(10,7,4,.6));
+  }
+
+  /* ── FOOTER ──────────────────────────────────── */
+  footer {
+    background: #0a0704;
+    padding: 60px 40px 32px;
+    border-top: 1px solid rgba(200,169,110,.1);
+  }
+  .footer-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px;
+    margin-bottom: 48px;
+  }
+  .footer-brand { }
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 12px; display: block;
+  }
+  .footer-tagline { font-size: 13px; color: var(--fog); line-height: 1.6; }
+  .footer-col-title {
+    font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 20px;
+  }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-links a {
+    color: var(--fog); text-decoration: none; font-size: 14px;
+    transition: color .2s, padding-left .2s;
+  }
+  .footer-links a:hover { color: var(--gold2); padding-left: 6px; }
+  .footer-bottom {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 24px; border-top: 1px solid rgba(200,169,110,.07);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-copy { font-size: 12px; color: rgba(200,169,110,.3); }
+
+  /* ── DIVIDER ─────────────────────────────────── */
+  .divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200,169,110,.2), transparent);
+  }
+
+  /* ── RESPONSIVE ──────────────────────────────── */
+  @media (max-width: 900px) {
+    nav { padding: 18px 24px; }
+    nav.scrolled { padding: 12px 24px; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .section-inner { padding: 0 24px; }
+    .about-grid { grid-template-columns: 1fr; gap: 48px; }
+    .about-visual { max-width: 360px; margin: 0 auto; }
+    .advantages-header { grid-template-columns: 1fr; gap: 32px; }
+    .cards-grid { grid-template-columns: 1fr 1fr; }
+    .services-grid { grid-template-columns: 1fr; }
+    .location-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr 1fr; }
+    footer { padding: 48px 24px 24px; }
+  }
+  @media (max-width: 600px) {
+    body { cursor: auto; }
+    #cursor, #cursor-ring { display: none; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr; }
+    .hero-cta { flex-direction: column; align-items: center; }
+    .btn-primary, .btn-outline { text-align: center; width: 220px; display: block; }
+    .map-wrap { height: 300px; }
+    .tabs { gap: 0; }
+    .tab-btn { padding: 10px 14px; font-size: 11px; }
+    .service-block { padding: 36px 28px; }
+    .review-card { min-width: 280px; }
+  }
+
+  /* ── LANGUAGE CONTENT ────────────────────────── */
+  [data-lang] { display: none; }
+  [data-lang].active { display: block; }
+  [data-lang-inline] { display: none; }
+  [data-lang-inline].active { display: inline; }
+  span[data-lang] { display: none; }
+  span[data-lang].active { display: inline; }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-word">ELEMENT</div>
+  <div class="loader-bar"></div>
+  <div class="loader-sub">Prague · Espresso Bar</div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#hero" class="nav-logo">ELEMENT</a>
+  <div class="nav-links">
+    <a href="#about"><span data-lang="cs" class="active">O nás</span><span data-lang="en">About</span><span data-lang="de">Über uns</span><span data-lang="ru">О нас</span></a>
+    <a href="#advantages"><span data-lang="cs" class="active">Výhody</span><span data-lang="en">Benefits</span><span data-lang="de">Vorteile</span><span data-lang="ru">Преимущества</span></a>
+    <a href="#menu"><span data-lang="cs" class="active">Menu</span><span data-lang="en">Menu</span><span data-lang="de">Menü</span><span data-lang="ru">Меню</span></a>
+    <a href="#services"><span data-lang="cs" class="active">Služby</span><span data-lang="en">Services</span><span data-lang="de">Leistungen</span><span data-lang="ru">Услуги</span></a>
+    <a href="#location"><span data-lang="cs" class="active">Kontakt</span><span data-lang="en">Contact</span><span data-lang="de">Kontakt</span><span data-lang="ru">Контакт</span></a>
+  </div>
+  <div style="display:flex;gap:16px;align-items:center">
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('cs')">CS</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('de')">DE</button>
+      <button class="lang-btn" onclick="setLang('ru')">RU</button>
+    </div>
+    <div class="hamburger" id="hamburger" onclick="toggleMobile()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about" onclick="toggleMobile()"><span data-lang="cs" class="active">O nás</span><span data-lang="en">About</span><span data-lang="de">Über uns</span><span data-lang="ru">О нас</span></a>
+  <a href="#advantages" onclick="toggleMobile()"><span data-lang="cs" class="active">Výhody</span><span data-lang="en">Benefits</span><span data-lang="de">Vorteile</span><span data-lang="ru">Преимущества</span></a>
+  <a href="#menu" onclick="toggleMobile()"><span data-lang="cs" class="active">Menu</span><span data-lang="en">Menu</span><span data-lang="de">Menü</span><span data-lang="ru">Меню</span></a>
+  <a href="#services" onclick="toggleMobile()"><span data-lang="cs" class="active">Služby</span><span data-lang="en">Services</span><span data-lang="de">Leistungen</span><span data-lang="ru">Услуги</span></a>
+  <a href="#location" onclick="toggleMobile()"><span data-lang="cs" class="active">Kontakt</span><span data-lang="en">Contact</span><span data-lang="de">Kontakt</span><span data-lang="ru">Контакт</span></a>
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('cs')">CS</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('de')">DE</button>
+    <button class="lang-btn" onclick="setLang('ru')">RU</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-noise"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">
+      <span data-lang="cs" class="active">Vítkova 5/32, Praha 8 — Karlín</span>
+      <span data-lang="en">Vítkova 5/32, Prague 8 — Karlín</span>
+      <span data-lang="de">Vítkova 5/32, Prag 8 — Karlín</span>
+      <span data-lang="ru">Vítkova 5/32, Прага 8 — Карлин</span>
+    </p>
+    <h1 class="hero-title">
+      <span>ELEMENT</span>
+      <em>
+        <span data-lang="cs" class="active">Espresso Bar · Praha</span>
+        <span data-lang="en">Espresso Bar · Prague</span>
+        <span data-lang="de">Espresso Bar · Prag</span>
+        <span data-lang="ru">Эспрессо Бар · Прага</span>
+      </em>
+    </h1>
+    <p class="hero-subtitle">
+      <span data-lang="cs" class="active">Výběrová káva, domácí dezerty a přátelská atmosféra v srdci Karlína. Přijďte ochutnat to nejlepší z kávové kultury.</span>
+      <span data-lang="en">Specialty coffee, homemade desserts and a friendly atmosphere in the heart of Karlín. Come taste the best of coffee culture.</span>
+      <span data-lang="de">Specialty Coffee, hausgemachte Desserts und eine freundliche Atmosphäre im Herzen von Karlín. Erleben Sie die Kaffeekultur auf höchstem Niveau.</span>
+      <span data-lang="ru">Авторский кофе, домашние десерты и дружественная атмосфера в сердце Карлина. Приходите насладиться лучшим кофейным опытом.</span>
+    </p>
+    <div class="hero-cta">
+      <a href="#menu" class="btn-primary">
+        <span data-lang="cs" class="active">Prohlédnout menu</span>
+        <span data-lang="en">View Menu</span>
+        <span data-lang="de">Menü ansehen</span>
+        <span data-lang="ru">Смотреть меню</span>
+      </a>
+      <a href="#location" class="btn-outline">
+        <span data-lang="cs" class="active">Najít nás</span>
+        <span data-lang="en">Find Us</span>
+        <span data-lang="de">Uns finden</span>
+        <span data-lang="ru">Как нас найти</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span class="scroll-text">scroll</span>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">Specialty Coffee</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Výběrová Káva</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Homemade Desserts</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Domácí Dezerty</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Karlín · Praha 8</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Espresso Bar</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Respekt Coffee</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Brazil · Ethiopia · Colombia · Jamaica</span><span class="marquee-sep">✦</span>
+    <!-- duplicate for infinite loop -->
+    <span class="marquee-item">Specialty Coffee</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Výběrová Káva</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Homemade Desserts</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Domácí Dezerty</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Karlín · Praha 8</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Espresso Bar</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Respekt Coffee</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Brazil · Ethiopia · Colombia · Jamaica</span><span class="marquee-sep">✦</span>
+  </div>
+</div>
+
+<!-- ═══════════════════ ABOUT ═══════════════════ -->
+<section id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-visual reveal">
+        <div class="about-img-frame">
+          <div class="about-img-inner">
+            <span class="coffee-icon">☕</span>
+          </div>
+        </div>
+        <div class="about-badge">
+          <span class="about-badge-num">10+</span>
+          <span class="about-badge-txt">let<br>v Praze</span>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="section-label">
+          <span data-lang="cs" class="active">O nás</span>
+          <span data-lang="en">About Us</span>
+          <span data-lang="de">Über Uns</span>
+          <span data-lang="ru">О нас</span>
+        </div>
+
+        <h2 class="section-title">
+          <span data-lang="cs" class="active">Káva s duší.<br><span>Každý šálek</span> je příběh.</span>
+          <span data-lang="en">Coffee with soul.<br><span>Every cup</span> tells a story.</span>
+          <span data-lang="de">Kaffee mit Seele.<br><span>Jede Tasse</span> erzählt eine Geschichte.</span>
+          <span data-lang="ru">Кофе с душой.<br><span>Каждая чашка</span> — это история.</span>
+        </h2>
+
+        <p class="section-body">
+          <span data-lang="cs" class="active">Element je víc než kavárna. Je to místo, kde majitel vaří kávu s vášní a peče vlastní brownies, banánový chléb a sušenky přímo v obchodě. Od otevření milujeme Karlín a Karlín miluje nás.</span>
+          <span data-lang="en">Element is more than a café. It's a place where the owner brews coffee with passion and bakes his own brownies, banana bread and cookies right in the shop. Since opening, we have loved Karlín — and Karlín loves us back.</span>
+          <span data-lang="de">Element ist mehr als ein Café. Es ist ein Ort, an dem der Inhaber Kaffee mit Leidenschaft braut und eigene Brownies, Bananenbrot und Kekse direkt im Laden bäckt. Seit der Eröffnung lieben wir Karlín — und Karlín liebt uns zurück.</span>
+          <span data-lang="ru">Element — это больше, чем кафе. Это место, где владелец варит кофе с душой и сам выпекает брауни, банановый хлеб и печенье прямо в заведении. С момента открытия мы любим Карлин, и Карлин отвечает нам взаимностью.</span>
+        </p>
+
+        <div style="margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div style="padding:24px;border:1px solid rgba(200,169,110,.12);border-radius:2px">
+            <div style="font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:var(--gold);line-height:1">4</div>
+            <div style="font-size:13px;color:var(--fog);margin-top:6px">
+              <span data-lang="cs" class="active">Světové kávové regiony</span>
+              <span data-lang="en">World coffee regions</span>
+              <span data-lang="de">Kaffeeregionen weltweit</span>
+              <span data-lang="ru">Кофейных региона мира</span>
+            </div>
+          </div>
+          <div style="padding:24px;border:1px solid rgba(200,169,110,.12);border-radius:2px">
+            <div style="font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:var(--gold);line-height:1">4.3★</div>
+            <div style="font-size:13px;color:var(--fog);margin-top:6px">TripAdvisor</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ ADVANTAGES ═══════════════════ -->
+<section id="advantages">
+  <div class="section-inner">
+    <div class="advantages-header">
+      <div class="reveal">
+        <div class="section-label">
+          <span data-lang="cs" class="active">Proč Element</span>
+          <span data-lang="en">Why Element</span>
+          <span data-lang="de">Warum Element</span>
+          <span data-lang="ru">Почему Element</span>
+        </div>
+        <h2 class="section-title">
+          <span data-lang="cs" class="active">Naše <span>výhody</span></span>
+          <span data-lang="en">Our <span>benefits</span></span>
+          <span data-lang="de">Unsere <span>Vorteile</span></span>
+          <span data-lang="ru">Наши <span>преимущества</span></span>
+        </h2>
+      </div>
+      <div class="reveal">
+        <p class="section-body">
+          <span data-lang="cs" class="active">Jsme malý podnik s velkým srdcem. Vše co podáváme je vyrobeno s láskou — od prvního espressa po poslední brownie.</span>
+          <span data-lang="en">We are a small business with a big heart. Everything we serve is made with love — from the first espresso to the last brownie.</span>
+          <span data-lang="de">Wir sind ein kleines Unternehmen mit großem Herzen. Alles, was wir servieren, wird mit Liebe gemacht — vom ersten Espresso bis zum letzten Brownie.</span>
+          <span data-lang="ru">Мы маленький бизнес с большим сердцем. Всё, что мы подаём, сделано с любовью — от первого эспрессо до последнего брауни.</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="adv-card reveal">
+        <span class="adv-num">01</span>
+        <span class="adv-icon">☕</span>
+        <div class="adv-title">
+          <span data-lang="cs" class="active">Výběrová káva</span>
+          <span data-lang="en">Specialty Coffee</span>
+          <span data-lang="de">Specialty Coffee</span>
+          <span data-lang="ru">Авторский кофе</span>
+        </div>
+        <p class="adv-body">
+          <span data-lang="cs" class="active">Káva z české pražírny Respekt Coffee — zrna z Brazílie, Etiopie, Kolumbie a Jamajky, čerstvě namletá přímo pro vás.</span>
+          <span data-lang="en">Coffee from Czech roastery Respekt Coffee — beans from Brazil, Ethiopia, Colombia and Jamaica, freshly ground just for you.</span>
+          <span data-lang="de">Kaffee aus der tschechischen Rösterei Respekt Coffee — Bohnen aus Brasilien, Äthiopien, Kolumbien und Jamaika, frisch gemahlen für Sie.</span>
+          <span data-lang="ru">Кофе из чешской обжарки Respekt Coffee — зёрна из Бразилии, Эфиопии, Колумбии и Ямайки, свежесмолотые специально для вас.</span>
+        </p>
+      </div>
+      <div class="adv-card reveal">
+        <span class="adv-num">02</span>
+        <span class="adv-icon">🧁</span>
+        <div class="adv-title">
+          <span data-lang="cs" class="active">Domácí pečivo</span>
+          <span data-lang="en">Homemade Baking</span>
+          <span data-lang="de">Hausgemachtes Gebäck</span>
+          <span data-lang="ru">Домашняя выпечка</span>
+        </div>
+        <p class="adv-body">
+          <span data-lang="cs" class="active">Brownies, banánový chléb a sušenky pečené majitelem přímo v kavárně. Recepty, za kterými se jezdí až do Evropy.</span>
+          <span data-lang="en">Brownies, banana bread and cookies baked by the owner right in the café. Recipes people travel across Europe for.</span>
+          <span data-lang="de">Brownies, Bananenbrot und Kekse, vom Inhaber direkt im Café gebacken. Rezepte, für die man quer durch Europa reist.</span>
+          <span data-lang="ru">Брауни, банановый хлеб и печенье — владелец выпекает их прямо в кафе. Рецепты, ради которых едут со всей Европы.</span>
+        </p>
+      </div>
+      <div class="adv-card reveal">
+        <span class="adv-num">03</span>
+        <span class="adv-icon">💚</span>
+        <div class="adv-title">
+          <span data-lang="cs" class="active">S láskou & vášní</span>
+          <span data-lang="en">With Love & Passion</span>
+          <span data-lang="de">Mit Liebe & Leidenschaft</span>
+          <span data-lang="ru">С любовью и страстью</span>
+        </div>
+        <p class="adv-body">
+          <span data-lang="cs" class="active">Majitel vždy přináší optimismus do vašeho dne. Poradí, doporučí a vysvětlí vše o kávě. Padl do ní hlava nehlava.</span>
+          <span data-lang="en">The owner always brings optimism to your day. He advises, recommends and explains everything about coffee. He's fallen for it completely.</span>
+          <span data-lang="de">Der Inhaber bringt immer Optimismus in Ihren Tag. Er berät, empfiehlt und erklärt alles über Kaffee. Er ist völlig davon begeistert.</span>
+          <span data-lang="ru">Владелец всегда приносит оптимизм в ваш день. Посоветует, порекомендует и расскажет всё о кофе. Он без ума от своего дела.</span>
+        </p>
+      </div>
+      <div class="adv-card reveal">
+        <span class="adv-num">04</span>
+        <span class="adv-icon">🍺</span>
+        <div class="adv-title">
+          <span data-lang="cs" class="active">Řemeslné nápoje</span>
+          <span data-lang="en">Craft Drinks</span>
+          <span data-lang="de">Handwerkliche Getränke</span>
+          <span data-lang="ru">Крафтовые напитки</span>
+        </div>
+        <p class="adv-body">
+          <span data-lang="cs" class="active">Domácí limonády, řemeslné pivo i čerstvé snídaně. Přijďte na ranní kávu nebo odpolední odpočinek.</span>
+          <span data-lang="en">Homemade lemonades, craft beer and fresh breakfasts. Come for a morning coffee or an afternoon break.</span>
+          <span data-lang="de">Hausgemachte Limonaden, Craft Beer und frisches Frühstück. Kommen Sie auf einen Morgenkaffee oder eine Nachmittagspause.</span>
+          <span data-lang="ru">Домашние лимонады, крафтовое пиво и свежие завтраки. Приходите на утренний кофе или послеполуденный отдых.</span>
+        </p>
+      </div>
+      <div class="adv-card reveal">
+        <span class="adv-num">05</span>
+        <span class="adv-icon">🫘</span>
+        <div class="adv-title">
+          <span data-lang="cs" class="active">Kávové zboží</span>
+          <span data-lang="en">Coffee Shop</span>
+          <span data-lang="de">Kaffeezubehör</span>
+          <span data-lang="ru">Кофейный магазин</span>
+        </div>
+        <p class="adv-body">
+          <span data-lang="cs" class="active">Kupte si zrnkovou kávu, nechte si ji namlít nebo si odneste kávové bonbony a doplňky pro domácí přípravu.</span>
+          <span data-lang="en">Buy whole bean coffee, have it ground, or take home coffee candies and accessories for home brewing.</span>
+          <span data-lang="de">Kaufen Sie ganze Kaffeebohnen, lassen Sie sie mahlen oder nehmen Sie Kaffeebonbons und Zubehör für die Heimzubereitung mit.</span>
+          <span data-lang="ru">Купите зерновой кофе, помелите его здесь или возьмите домой кофейные конфеты и аксессуары для домашнего приготовления.</span>
+        </p>
+      </div>
+      <div class="adv-card reveal">
+        <span class="adv-num">06</span>
+        <span class="adv-icon">📍</span>
+        <div class="adv-title">
+          <span data-lang="cs" class="active">Srdce Karlína</span>
+          <span data-lang="en">Heart of Karlín</span>
+          <span data-lang="de">Herz von Karlín</span>
+          <span data-lang="ru">Сердце Карлина</span>
+        </div>
+        <p class="adv-body">
+          <span data-lang="cs" class="active">Jsme v jedné z nejhipovějších čtvrtí Prahy. Snadná dostupnost MHD, klidné zákoutí uprostřed rušného města.</span>
+          <span data-lang="en">Located in one of Prague's trendiest districts. Easy public transport access, a calm corner amid the bustling city.</span>
+          <span data-lang="de">In einem der angesagtesten Bezirke Prags. Gut mit öffentlichen Verkehrsmitteln erreichbar, eine ruhige Ecke inmitten der geschäftigen Stadt.</span>
+          <span data-lang="ru">В одном из самых модных районов Праги. Удобный доступ на общественном транспорте, спокойный уголок в центре оживлённого города.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ MENU ═══════════════════ -->
+<section id="menu">
+  <div class="section-inner">
+    <div class="menu-header reveal">
+      <div class="section-label">
+        <span data-lang="cs" class="active">Sortiment</span>
+        <span data-lang="en">Assortment</span>
+        <span data-lang="de">Sortiment</span>
+        <span data-lang="ru">Ассортимент</span>
+      </div>
+      <h2 class="section-title">
+        <span data-lang="cs" class="active">Naše <span>menu</span></span>
+        <span data-lang="en">Our <span>menu</span></span>
+        <span data-lang="de">Unser <span>Menü</span></span>
+        <span data-lang="ru">Наше <span>меню</span></span>
+      </h2>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('coffee')">
+        <span data-lang="cs" class="active">☕ Káva</span>
+        <span data-lang="en">☕ Coffee</span>
+        <span data-lang="de">☕ Kaffee</span>
+        <span data-lang="ru">☕ Кофе</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('food')">
+        <span data-lang="cs" class="active">🥐 Jídlo</span>
+        <span data-lang="en">🥐 Food</span>
+        <span data-lang="de">🥐 Essen</span>
+        <span data-lang="ru">🥐 Еда</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('drinks')">
+        <span data-lang="cs" class="active">🍋 Nápoje</span>
+        <span data-lang="en">🍋 Drinks</span>
+        <span data-lang="de">🍋 Getränke</span>
+        <span data-lang="ru">🍋 Напитки</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('shop')">
+        <span data-lang="cs" class="active">🫘 Shop</span>
+        <span data-lang="en">🫘 Shop</span>
+        <span data-lang="de">🫘 Shop</span>
+        <span data-lang="ru">🫘 Магазин</span>
+      </button>
+    </div>
+
+    <!-- Coffee -->
+    <div class="tab-pane active" id="tab-coffee">
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">Espresso</span>
+          <span class="menu-card-price">55 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Klasické espresso z výběrové směsi. Husté, aromatické, perfektní crema.</span>
+          <span data-lang="en">Classic espresso from specialty blend. Dense, aromatic, perfect crema.</span>
+          <span data-lang="de">Klassischer Espresso aus einer Specialty-Mischung. Dicht, aromatisch, perfekte Crema.</span>
+          <span data-lang="ru">Классический эспрессо из авторской смеси. Густой, ароматный, идеальная крема.</span>
+        </p>
+        <span class="menu-card-tag">Single Origin</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">Flat White</span>
+          <span class="menu-card-price">79 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Dvojitý espresso shot s jemně napěněným mlékem. Silná a sametová chuť.</span>
+          <span data-lang="en">Double espresso shot with finely steamed milk. Strong and velvety taste.</span>
+          <span data-lang="de">Doppelter Espressoshot mit fein aufgeschäumter Milch. Stark und samtig im Geschmack.</span>
+          <span data-lang="ru">Двойной эспрессо с нежно вспененным молоком. Крепкий и бархатистый вкус.</span>
+        </p>
+        <span class="menu-card-tag">Bestseller</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">V60 / Filter</span>
+          <span class="menu-card-price">85 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Filtrovaná káva metodou přelití — čistá, světlá a ovocná. Plný chuťový profil.</span>
+          <span data-lang="en">Pour-over filtered coffee — clean, bright and fruity. Full flavour profile.</span>
+          <span data-lang="de">Pour-over Filterkaffee — klar, hell und fruchtig. Volles Geschmacksprofil.</span>
+          <span data-lang="ru">Фильтр-кофе методом пуровера — чистый, светлый и фруктовый. Полный вкусовой профиль.</span>
+        </p>
+        <span class="menu-card-tag">Single Origin</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">Cappuccino</span>
+          <span class="menu-card-price">72 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Italský klasik v dokonalém poměru espressa, mléka a mléčné pěny.</span>
+          <span data-lang="en">Italian classic in the perfect ratio of espresso, milk and milk foam.</span>
+          <span data-lang="de">Italienischer Klassiker im perfekten Verhältnis von Espresso, Milch und Milchschaum.</span>
+          <span data-lang="ru">Итальянская классика в идеальных пропорциях эспрессо, молока и молочной пены.</span>
+        </p>
+        <span class="menu-card-tag">Classic</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">Cold Brew</span>
+          <span class="menu-card-price">95 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Studená extrakce po dobu 18 hodin. Jemná, sladká a osvěžující káva bez hořkosti.</span>
+          <span data-lang="en">Cold extraction for 18 hours. Smooth, sweet and refreshing coffee without bitterness.</span>
+          <span data-lang="de">Kalte Extraktion über 18 Stunden. Sanft, süß und erfrischend, ohne Bitterkeit.</span>
+          <span data-lang="ru">Холодная экстракция в течение 18 часов. Мягкий, сладкий и освежающий кофе без горечи.</span>
+        </p>
+        <span class="menu-card-tag">Seasonal</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">Latte Art</span>
+          <span class="menu-card-price">82 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Velké latte s kresleným motivem v mléčné pěně. Fotogenické i chutné.</span>
+          <span data-lang="en">Large latte with an art pattern in milk foam. Photogenic and delicious.</span>
+          <span data-lang="de">Großes Latte mit einem Kunstmuster im Milchschaum. Fotogen und lecker.</span>
+          <span data-lang="ru">Большой латте с художественным рисунком в молочной пене. Фотогеничный и вкусный.</span>
+        </p>
+        <span class="menu-card-tag">Latte</span>
+      </div>
+    </div>
+
+    <!-- Food -->
+    <div class="tab-pane" id="tab-food">
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Brownie</span>
+            <span data-lang="en">Brownie</span>
+            <span data-lang="de">Brownie</span>
+            <span data-lang="ru">Брауни</span>
+          </span>
+          <span class="menu-card-price">65 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Čokoládový brownie pečený majitelem každý den. Receptura, za kterou se jezdí do Evropy.</span>
+          <span data-lang="en">Chocolate brownie baked by the owner daily. A recipe people travel across Europe for.</span>
+          <span data-lang="de">Schokoladenbrownies, täglich vom Inhaber gebacken. Ein Rezept, für das man durch Europa reist.</span>
+          <span data-lang="ru">Шоколадный брауни, который владелец печёт каждый день. Рецепт, ради которого едут по всей Европе.</span>
+        </p>
+        <span class="menu-card-tag">House Special</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Banánový chléb</span>
+            <span data-lang="en">Banana Bread</span>
+            <span data-lang="de">Bananenbrot</span>
+            <span data-lang="ru">Банановый хлеб</span>
+          </span>
+          <span class="menu-card-price">70 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Domácí banánový chléb — vlhký, aromatický, pečený čerstvě každé ráno.</span>
+          <span data-lang="en">Homemade banana bread — moist, aromatic, baked fresh every morning.</span>
+          <span data-lang="de">Hausgemachtes Bananenbrot — feucht, aromatisch, jeden Morgen frisch gebacken.</span>
+          <span data-lang="ru">Домашний банановый хлеб — влажный, ароматный, свежевыпеченный каждое утро.</span>
+        </p>
+        <span class="menu-card-tag">Homemade</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Sušenky</span>
+            <span data-lang="en">Cookies</span>
+            <span data-lang="de">Kekse</span>
+            <span data-lang="ru">Печенье</span>
+          </span>
+          <span class="menu-card-price">45 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Domácí sušenky různých příchutí — pečené s láskou a pečlivě vybranou ingrediencí.</span>
+          <span data-lang="en">Homemade cookies in various flavours — baked with love and carefully selected ingredients.</span>
+          <span data-lang="de">Hausgemachte Kekse in verschiedenen Geschmacksrichtungen — mit Liebe und sorgfältig ausgewählten Zutaten gebacken.</span>
+          <span data-lang="ru">Домашнее печенье разных вкусов — испечённое с любовью и тщательно подобранными ингредиентами.</span>
+        </p>
+        <span class="menu-card-tag">Homemade</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Sendvič</span>
+            <span data-lang="en">Sandwich</span>
+            <span data-lang="de">Sandwich</span>
+            <span data-lang="ru">Сэндвич</span>
+          </span>
+          <span class="menu-card-price">120 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Čerstvý sendvič připravený každý den z lokálních surovin. Sezónní složení.</span>
+          <span data-lang="en">Fresh sandwich prepared daily from local ingredients. Seasonal composition.</span>
+          <span data-lang="de">Frisches Sandwich täglich aus lokalen Zutaten zubereitet. Saisonale Zusammensetzung.</span>
+          <span data-lang="ru">Свежий сэндвич, приготовленный ежедневно из местных продуктов. Сезонный состав.</span>
+        </p>
+        <span class="menu-card-tag">Fresh Daily</span>
+      </div>
+    </div>
+
+    <!-- Drinks -->
+    <div class="tab-pane" id="tab-drinks">
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Domácí limonáda</span>
+            <span data-lang="en">Homemade Lemonade</span>
+            <span data-lang="de">Hausgemachte Limonade</span>
+            <span data-lang="ru">Домашний лимонад</span>
+          </span>
+          <span class="menu-card-price">75 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Čerstvá limonáda ze sezónního ovoce — citrón, maliny, mango nebo zázvor.</span>
+          <span data-lang="en">Fresh lemonade from seasonal fruit — lemon, raspberry, mango or ginger.</span>
+          <span data-lang="de">Frische Limonade aus Saisonfrüchten — Zitrone, Himbeere, Mango oder Ingwer.</span>
+          <span data-lang="ru">Свежий лимонад из сезонных фруктов — лимон, малина, манго или имбирь.</span>
+        </p>
+        <span class="menu-card-tag">Seasonal</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Řemeslné pivo</span>
+            <span data-lang="en">Craft Beer</span>
+            <span data-lang="de">Craft Beer</span>
+            <span data-lang="ru">Крафтовое пиво</span>
+          </span>
+          <span class="menu-card-price">85 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Výběr českých řemeslných piv z lokálních pivovarů. Rotující výběr každý týden.</span>
+          <span data-lang="en">Selection of Czech craft beers from local breweries. Rotating selection every week.</span>
+          <span data-lang="de">Auswahl tschechischer Craft Biere aus lokalen Brauereien. Wechselnde Auswahl jede Woche.</span>
+          <span data-lang="ru">Выбор чешских крафтовых сортов пива из местных пивоварен. Ротационная подборка каждую неделю.</span>
+        </p>
+        <span class="menu-card-tag">Local</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Čaj</span>
+            <span data-lang="en">Tea</span>
+            <span data-lang="de">Tee</span>
+            <span data-lang="ru">Чай</span>
+          </span>
+          <span class="menu-card-price">60 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Výběr prémiových sypaných čajů — zelené, černé, bylinkové a ovocné varianty.</span>
+          <span data-lang="en">Selection of premium loose-leaf teas — green, black, herbal and fruit varieties.</span>
+          <span data-lang="de">Auswahl an Premium-Losteeblättern — grüne, schwarze, Kräuter- und Fruchtsorten.</span>
+          <span data-lang="ru">Выбор премиальных листовых чаёв — зелёные, чёрные, травяные и фруктовые варианты.</span>
+        </p>
+        <span class="menu-card-tag">Premium</span>
+      </div>
+    </div>
+
+    <!-- Shop -->
+    <div class="tab-pane" id="tab-shop">
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Zrnková káva</span>
+            <span data-lang="en">Whole Bean Coffee</span>
+            <span data-lang="de">Kaffeebohnen</span>
+            <span data-lang="ru">Зерновой кофе</span>
+          </span>
+          <span class="menu-card-price">od 250 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Zrnková káva od Respekt Coffee. Brazílie, Etiopie, Kolumbie, Jamajka. Necháme namlít dle vaší metody přípravy.</span>
+          <span data-lang="en">Whole beans from Respekt Coffee. Brazil, Ethiopia, Colombia, Jamaica. We grind to your brewing method.</span>
+          <span data-lang="de">Kaffeebohnen von Respekt Coffee. Brasilien, Äthiopien, Kolumbien, Jamaika. Wir mahlen nach Ihrer Brühmethode.</span>
+          <span data-lang="ru">Зерновой кофе от Respekt Coffee. Бразилия, Эфиопия, Колумбия, Ямайка. Смелем под ваш способ приготовления.</span>
+        </p>
+        <span class="menu-card-tag">Take Away</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Kávové bonbony</span>
+            <span data-lang="en">Coffee Candies</span>
+            <span data-lang="de">Kaffeebonbons</span>
+            <span data-lang="ru">Кофейные конфеты</span>
+          </span>
+          <span class="menu-card-price">90 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Unikátní kávové bonbony — skvělý dárek nebo sladkost k espressu. Neobvyklé i chutné.</span>
+          <span data-lang="en">Unique coffee candies — a great gift or sweet treat with espresso. Unusual and delicious.</span>
+          <span data-lang="de">Einzigartige Kaffeebonbons — tolles Geschenk oder Süßigkeit zum Espresso. Ungewöhnlich und lecker.</span>
+          <span data-lang="ru">Уникальные кофейные конфеты — отличный подарок или сладость к эспрессо. Необычно и вкусно.</span>
+        </p>
+        <span class="menu-card-tag">Gift Idea</span>
+      </div>
+      <div class="menu-card">
+        <div class="menu-card-top">
+          <span class="menu-card-name">
+            <span data-lang="cs" class="active">Příslušenství</span>
+            <span data-lang="en">Accessories</span>
+            <span data-lang="de">Zubehör</span>
+            <span data-lang="ru">Аксессуары</span>
+          </span>
+          <span class="menu-card-price">od 150 Kč</span>
+        </div>
+        <p class="menu-card-desc">
+          <span data-lang="cs" class="active">Doplňky pro domácí přípravu kávy — filtry, měrky, čistící tablety a další nezbytnosti baristy.</span>
+          <span data-lang="en">Accessories for home coffee preparation — filters, measures, cleaning tablets and other barista essentials.</span>
+          <span data-lang="de">Zubehör für die Kaffeezubereitung zu Hause — Filter, Messlöffel, Reinigungstabletten und weitere Barista-Utensilien.</span>
+          <span data-lang="ru">Аксессуары для домашнего приготовления кофе — фильтры, мерки, чистящие таблетки и другие необходимые вещи баристы.</span>
+        </p>
+        <span class="menu-card-tag">Barista Tools</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ SERVICES ═══════════════════ -->
+<section id="services">
+  <div class="section-inner">
+    <div class="reveal" style="margin-bottom:60px">
+      <div class="section-label">
+        <span data-lang="cs" class="active">Služby</span>
+        <span data-lang="en">Services</span>
+        <span data-lang="de">Leistungen</span>
+        <span data-lang="ru">Услуги</span>
+      </div>
+      <h2 class="section-title">
+        <span data-lang="cs" class="active">Co pro vás <span>nabízíme</span></span>
+        <span data-lang="en">What we <span>offer</span></span>
+        <span data-lang="de">Was wir <span>anbieten</span></span>
+        <span data-lang="ru">Что мы <span>предлагаем</span></span>
+      </h2>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-block reveal" data-num="01">
+        <span class="service-icon">☕</span>
+        <div class="service-title">
+          <span data-lang="cs" class="active">Espresso bar</span>
+          <span data-lang="en">Espresso bar</span>
+          <span data-lang="de">Espresso-Bar</span>
+          <span data-lang="ru">Эспрессо-бар</span>
+        </div>
+        <p class="service-body">
+          <span data-lang="cs" class="active">Profesionální espresso bar s výběrovou kávou z různých světových regionů. Každý šálek připravovaný s péčí a precizností zkušeného baristy.</span>
+          <span data-lang="en">Professional espresso bar with specialty coffee from various world regions. Each cup prepared with the care and precision of an experienced barista.</span>
+          <span data-lang="de">Professionelle Espresso-Bar mit Specialty Coffee aus verschiedenen Weltregionen. Jede Tasse mit der Sorgfalt und Präzision eines erfahrenen Baristas zubereitet.</span>
+          <span data-lang="ru">Профессиональный эспрессо-бар с авторским кофе из разных регионов мира. Каждая чашка приготовлена с заботой и точностью опытного баристы.</span>
+        </p>
+        <a href="#location" class="service-link">
+          <span data-lang="cs" class="active">Navštivit</span>
+          <span data-lang="en">Visit us</span>
+          <span data-lang="de">Besuchen</span>
+          <span data-lang="ru">Посетить</span>
+          →
+        </a>
+      </div>
+
+      <div class="service-block reveal" data-num="02">
+        <span class="service-icon">🍳</span>
+        <div class="service-title">
+          <span data-lang="cs" class="active">Snídaně & Brunch</span>
+          <span data-lang="en">Breakfast & Brunch</span>
+          <span data-lang="de">Frühstück & Brunch</span>
+          <span data-lang="ru">Завтрак & Бранч</span>
+        </div>
+        <p class="service-body">
+          <span data-lang="cs" class="active">Každodenní čerstvá nabídka snídaní — sendviče, domácí pečivo, jogurty a sezonní ingredience. Ideální start pracovního dne nebo víkendový brunch.</span>
+          <span data-lang="en">Daily fresh breakfast offer — sandwiches, homemade pastries, yogurts and seasonal ingredients. Perfect start to a work day or weekend brunch.</span>
+          <span data-lang="de">Tägliches frisches Frühstücksangebot — Sandwiches, hausgemachtes Gebäck, Joghurts und saisonale Zutaten. Perfekter Start in den Arbeitstag oder Wochenendbrunch.</span>
+          <span data-lang="ru">Ежедневное свежее предложение завтраков — сэндвичи, домашняя выпечка, йогурты и сезонные ингредиенты. Идеальное начало рабочего дня или выходной бранч.</span>
+        </p>
+        <a href="#menu" class="service-link">
+          <span data-lang="cs" class="active">Zobrazit menu</span>
+          <span data-lang="en">View menu</span>
+          <span data-lang="de">Menü ansehen</span>
+          <span data-lang="ru">Меню</span>
+          →
+        </a>
+      </div>
+
+      <div class="service-block reveal" data-num="03">
+        <span class="service-icon">🎁</span>
+        <div class="service-title">
+          <span data-lang="cs" class="active">Kávový shop</span>
+          <span data-lang="en">Coffee Shop</span>
+          <span data-lang="de">Kaffee-Shop</span>
+          <span data-lang="ru">Кофейный магазин</span>
+        </div>
+        <p class="service-body">
+          <span data-lang="cs" class="active">Odneste si s sebou tu nejlepší kávu — zrnkovou i mletou, kávové bonbony a vybavení pro domácí přípravu. Skvělé dárky pro milovníky kávy.</span>
+          <span data-lang="en">Take home the finest coffee — whole bean and ground, coffee candies and home brewing equipment. Great gifts for coffee lovers.</span>
+          <span data-lang="de">Nehmen Sie den besten Kaffee mit nach Hause — ganze Bohnen und gemahlen, Kaffeebonbons und Heimbrühausrüstung. Tolle Geschenke für Kaffeeliebhaber.</span>
+          <span data-lang="ru">Возьмите домой лучший кофе — зерновой и молотый, кофейные конфеты и оборудование для домашней варки. Отличные подарки для любителей кофе.</span>
+        </p>
+        <a href="#menu" class="service-link">
+          <span data-lang="cs" class="active">Do shopu</span>
+          <span data-lang="en">To shop</span>
+          <span data-lang="de">Zum Shop</span>
+          <span data-lang="ru">В магазин</span>
+          →
+        </a>
+      </div>
+
+      <div class="service-block reveal" data-num="04">
+        <span class="service-icon">🤝</span>
+        <div class="service-title">
+          <span data-lang="cs" class="active">Kávové workshopy</span>
+          <span data-lang="en">Coffee Workshops</span>
+          <span data-lang="de">Kaffee-Workshops</span>
+          <span data-lang="ru">Кофейные мастер-классы</span>
+        </div>
+        <p class="service-body">
+          <span data-lang="cs" class="active">Naučte se připravovat skvělou kávu doma. Osobní lekce s majitelem, který vás zasvětí do tajů přípravy espresso, filtru a latte art.</span>
+          <span data-lang="en">Learn to make great coffee at home. Personal lessons with the owner who will initiate you into the secrets of espresso, filter and latte art preparation.</span>
+          <span data-lang="de">Lernen Sie, zu Hause großartigen Kaffee zu machen. Persönliche Lektionen mit dem Inhaber, der Sie in die Geheimnisse der Espresso-, Filter- und Latte-Art-Zubereitung einweiht.</span>
+          <span data-lang="ru">Научитесь варить отличный кофе дома. Персональные уроки с владельцем, который посвятит вас в тайны приготовления эспрессо, фильтр-кофе и латте-арта.</span>
+        </p>
+        <a href="#location" class="service-link">
+          <span data-lang="cs" class="active">Zjistit více</span>
+          <span data-lang="en">Learn more</span>
+          <span data-lang="de">Mehr erfahren</span>
+          <span data-lang="ru">Узнать больше</span>
+          →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ REVIEWS ═══════════════════ -->
+<section id="reviews">
+  <div class="section-inner" style="margin-bottom:40px">
+    <div class="reveal">
+      <div class="section-label">
+        <span data-lang="cs" class="active">Recenze</span>
+        <span data-lang="en">Reviews</span>
+        <span data-lang="de">Bewertungen</span>
+        <span data-lang="ru">Отзывы</span>
+      </div>
+      <h2 class="section-title">
+        <span data-lang="cs" class="active">Co říkají <span>hosté</span></span>
+        <span data-lang="en">What <span>guests</span> say</span>
+        <span data-lang="de">Was <span>Gäste</span> sagen</span>
+        <span data-lang="ru">Что говорят <span>гости</span></span>
+      </h2>
+    </div>
+  </div>
+  <div class="reviews-track-wrap">
+    <div class="reviews-track">
+      <!-- Real reviews from TripAdvisor data -->
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Stopping by here for coffee and good mood since 2014. The best coffee I've tried in Prague, great cakes and sandwiches and an owner who always brings some optimism to your daily routine."</p>
+        <div class="review-author">TripAdvisor Guest</div>
+        <div class="review-date">Praha, Czech Republic</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"The owner does stuff with love and passion. He bakes his own brownies, banana bread and cookies right in the shop. Perfect place to pick up your morning kick."</p>
+        <div class="review-author">TripAdvisor Guest</div>
+        <div class="review-date">Prague, Czech Republic</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★☆</div>
+        <p class="review-text">"Skvělé místo kde se cítím jako doma. Výběrová káva, příjemná obsluha a domácí koláče. Karlínská klasika, kam se vracím každý týden."</p>
+        <div class="review-author">Místní zákazník</div>
+        <div class="review-date">Praha 8 — Karlín</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Definitiv mein Lieblingskaffeehaus in Karlín. Der Besitzer ist leidenschaftlich und die Brownies sind unglaublich. Ich komme immer wieder."</p>
+        <div class="review-author">Stammgast</div>
+        <div class="review-date">Praha, Tschechien</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Лучшее кафе в Карлине. Хозяин вкладывает душу в каждую чашку. Брауни просто невероятные — свежие каждый день. Обязательно зайдите!"</p>
+        <div class="review-author">Постоянный гость</div>
+        <div class="review-date">Прага, Чехия</div>
+      </div>
+      <!-- duplicates for loop -->
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Stopping by here for coffee and good mood since 2014. The best coffee I've tried in Prague, great cakes and sandwiches and an owner who always brings some optimism to your daily routine."</p>
+        <div class="review-author">TripAdvisor Guest</div>
+        <div class="review-date">Praha, Czech Republic</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"The owner does stuff with love and passion. He bakes his own brownies, banana bread and cookies right in the shop. Perfect place to pick up your morning kick."</p>
+        <div class="review-author">TripAdvisor Guest</div>
+        <div class="review-date">Prague, Czech Republic</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★☆</div>
+        <p class="review-text">"Skvělé místo kde se cítím jako doma. Výběrová káva, příjemná obsluha a domácí koláče. Karlínská klasika, kam se vracím každý týden."</p>
+        <div class="review-author">Místní zákazník</div>
+        <div class="review-date">Praha 8 — Karlín</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Definitiv mein Lieblingskaffeehaus in Karlín. Der Besitzer ist leidenschaftlich und die Brownies sind unglaublich. Ich komme immer wieder."</p>
+        <div class="review-author">Stammgast</div>
+        <div class="review-date">Praha, Tschechien</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Лучшее кафе в Карлине. Хозяин вкладывает душу в каждую чашку. Брауни просто невероятные — свежие каждый день. Обязательно зайдите!"</p>
+        <div class="review-author">Постоянный гость</div>
+        <div class="review-date">Прага, Чехия</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ LOCATION ═══════════════════ -->
+<section id="location">
+  <div class="section-inner">
+    <div class="reveal" style="margin-bottom:60px">
+      <div class="section-label">
+        <span data-lang="cs" class="active">Kde nás najdete</span>
+        <span data-lang="en">Find Us</span>
+        <span data-lang="de">Wo Sie uns finden</span>
+        <span data-lang="ru">Как нас найти</span>
+      </div>
+      <h2 class="section-title">
+        <span data-lang="cs" class="active"><span>Kontakt</span> & mapa</span>
+        <span data-lang="en"><span>Contact</span> & Map</span>
+        <span data-lang="de"><span>Kontakt</span> & Karte</span>
+        <span data-lang="ru"><span>Контакт</span> & Карта</span>
+      </h2>
+    </div>
+
+    <div class="location-grid reveal">
+      <div class="location-info">
+        <div class="info-item">
+          <span class="info-icon">📍</span>
+          <div>
+            <div class="info-label">
+              <span data-lang="cs" class="active">Adresa</span>
+              <span data-lang="en">Address</span>
+              <span data-lang="de">Adresse</span>
+              <span data-lang="ru">Адрес</span>
+            </div>
+            <div class="info-value">Vítkova 5/32<br>Praha 186 00<br>Praha 8 — Karlín</div>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">📞</span>
+          <div>
+            <div class="info-label">
+              <span data-lang="cs" class="active">Telefon</span>
+              <span data-lang="en">Phone</span>
+              <span data-lang="de">Telefon</span>
+              <span data-lang="ru">Телефон</span>
+            </div>
+            <div class="info-value"><a href="tel:+420777559099" style="color:var(--cream);text-decoration:none">+420 777 559 099</a></div>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">✉️</span>
+          <div>
+            <div class="info-label">E-mail</div>
+            <div class="info-value"><a href="mailto:coffeetime.cz@seznam.cz" style="color:var(--cream);text-decoration:none;font-size:13px">coffeetime.cz@seznam.cz</a></div>
+          </div>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🕐</span>
+          <div>
+            <div class="info-label">
+              <span data-lang="cs" class="active">Otevírací doba</span>
+              <span data-lang="en">Opening Hours</span>
+              <span data-lang="de">Öffnungszeiten</span>
+              <span data-lang="ru">Часы работы</span>
+            </div>
+            <div class="info-value" style="font-size:14px">
+              <span data-lang="cs" class="active">Po–Pá: 8:00 – 17:00<br>So–Ne: zavřeno</span>
+              <span data-lang="en">Mon–Fri: 8:00 AM – 5:00 PM<br>Sat–Sun: closed</span>
+              <span data-lang="de">Mo–Fr: 8:00 – 17:00 Uhr<br>Sa–So: geschlossen</span>
+              <span data-lang="ru">Пн–Пт: 8:00 – 17:00<br>Сб–Вс: закрыто</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-item" style="border-bottom:none">
+          <span class="info-icon">🚇</span>
+          <div>
+            <div class="info-label">
+              <span data-lang="cs" class="active">MHD</span>
+              <span data-lang="en">Public Transport</span>
+              <span data-lang="de">ÖPNV</span>
+              <span data-lang="ru">Общественный транспорт</span>
+            </div>
+            <div class="info-value" style="font-size:14px">
+              <span data-lang="cs" class="active">Metro B: Florenc (5 min pěšky)<br>Tram: Balabenka</span>
+              <span data-lang="en">Metro B: Florenc (5 min walk)<br>Tram: Balabenka</span>
+              <span data-lang="de">Metro B: Florenc (5 Min. zu Fuß)<br>Straßenbahn: Balabenka</span>
+              <span data-lang="ru">Метро B: Florenc (5 мин пешком)<br>Трамвай: Balabenka</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="map-wrap">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2559.526!2d14.4419689!3d50.0728101!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b95df216d714f%3A0x2c5a6e0b5cea2b0b!2sElement%20Prague!5e0!3m2!1sen!2scz!4v1699000000000!5m2!1sen!2scz"
+          allowfullscreen loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Element Prague Map">
+        </iframe>
+        <div class="map-overlay"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="footer-logo">ELEMENT</span>
+      <p class="footer-tagline">
+        <span data-lang="cs" class="active">Espresso bar s výběrovou kávou a domácími dezerty v srdci Karlína, Praha 8.</span>
+        <span data-lang="en">Specialty coffee espresso bar with homemade desserts in the heart of Karlín, Prague 8.</span>
+        <span data-lang="de">Specialty Coffee Espresso-Bar mit hausgemachten Desserts im Herzen von Karlín, Prag 8.</span>
+        <span data-lang="ru">Эспрессо-бар с авторским кофе и домашними десертами в сердце Карлина, Прага 8.</span>
+      </p>
+    </div>
+    <div>
+      <div class="footer-col-title">
+        <span data-lang="cs" class="active">Navigace</span>
+        <span data-lang="en">Navigation</span>
+        <span data-lang="de">Navigation</span>
+        <span data-lang="ru">Навигация</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="#about">
+          <span data-lang="cs" class="active">O nás</span><span data-lang="en">About</span><span data-lang="de">Über uns</span><span data-lang="ru">О нас</span>
+        </a></li>
+        <li><a href="#advantages">
+          <span data-lang="cs" class="active">Výhody</span><span data-lang="en">Benefits</span><span data-lang="de">Vorteile</span><span data-lang="ru">Преимущества</span>
+        </a></li>
+        <li><a href="#menu">
+          <span data-lang="cs" class="active">Menu</span><span data-lang="en">Menu</span><span data-lang="de">Menü</span><span data-lang="ru">Меню</span>
+        </a></li>
+        <li><a href="#services">
+          <span data-lang="cs" class="active">Služby</span><span data-lang="en">Services</span><span data-lang="de">Leistungen</span><span data-lang="ru">Услуги</span>
+        </a></li>
+        <li><a href="#location">
+          <span data-lang="cs" class="active">Kontakt</span><span data-lang="en">Contact</span><span data-lang="de">Kontakt</span><span data-lang="ru">Контакт</span>
+        </a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">
+        <span data-lang="cs" class="active">Kontakt</span>
+        <span data-lang="en">Contact</span>
+        <span data-lang="de">Kontakt</span>
+        <span data-lang="ru">Контакт</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="tel:+420777559099">+420 777 559 099</a></li>
+        <li><a href="mailto:coffeetime.cz@seznam.cz">coffeetime.cz@seznam.cz</a></li>
+        <li style="color:var(--fog);font-size:14px">Vítkova 5/32, Praha 8</li>
+        <li style="color:var(--fog);font-size:14px">Praha 186 00, CZ</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2024 Element Prague. All rights reserved.</div>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('cs')">CS</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('de')">DE</button>
+      <button class="lang-btn" onclick="setLang('ru')">RU</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── LOADER
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('done');
+  }, 2200);
+});
+
+// ── CURSOR
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px';
+  cur.style.top  = e.clientY + 'px';
+  ring.style.left = e.clientX + 'px';
+  ring.style.top  = e.clientY + 'px';
+});
+document.querySelectorAll('a,button,.adv-card,.menu-card,.service-block').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cur.style.transform  = 'translate(-50%,-50%) scale(2.5)';
+    ring.style.transform = 'translate(-50%,-50%) scale(1.5)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cur.style.transform  = 'translate(-50%,-50%) scale(1)';
+    ring.style.transform = 'translate(-50%,-50%) scale(1)';
+  });
+});
+
+// ── NAV SCROLL
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ── REVEAL
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── TABS
+function switchTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── MOBILE MENU
+function toggleMobile() {
+  const h = document.getElementById('hamburger');
+  const m = document.getElementById('mobileMenu');
+  h.classList.toggle('open');
+  m.classList.toggle('open');
+  // animate links
+  m.querySelectorAll('a').forEach((a, i) => {
+    a.style.animationDelay = (i * .07 + .1) + 's';
+  });
+}
+
+// ── LANGUAGE
+let currentLang = 'cs';
+function setLang(lang) {
+  currentLang = lang;
+  // Update all [data-lang] elements
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-lang') === lang);
+  });
+  // Update lang buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
+  });
+  // Update html lang
+  document.documentElement.lang = lang;
+  // Badge text for language
+  const badge = document.querySelector('.about-badge-txt');
+  if (badge) {
+    const texts = { cs:'let<br>v Praze', en:'years<br>in Prague', de:'Jahre<br>in Prag', ru:'лет<br>в Праге' };
+    badge.innerHTML = texts[lang] || texts.cs;
+  }
+}
+
+// ── PARALLAX HERO ORBS
+window.addEventListener('scroll', () => {
+  const s = window.scrollY;
+  document.querySelectorAll('.orb').forEach((o, i) => {
+    o.style.transform = `translateY(${s * (0.1 + i * 0.05)}px)`;
+  });
+});
+</script>
+</body>
+</html>
